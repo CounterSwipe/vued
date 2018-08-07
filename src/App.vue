@@ -1,50 +1,49 @@
 <template>
   <v-app>
-    <v-navigation-drawer persistent :mini-variant="miniVariant" :clipped="clipped" v-model="drawer" enable-resize-watcher fixed app>
+    <!--am=>temporary-->
+    <v-navigation-drawer v-model="sideNav" app>
       <v-list>
-        <v-list-tile value="true" v-for="(item, i) in items" :key="i">
+        <v-list-tile v-for="item in menuItems" :key="item.title" :to="item.link">
           <v-list-tile-action>
-            <v-icon v-html="item.icon"></v-icon>
+            <v-icon>{{ item.icon }}</v-icon>
           </v-list-tile-action>
-          <v-list-tile-content>
-            <v-list-tile-title v-text="item.title"></v-list-tile-title>
-          </v-list-tile-content>
+          <v-list-tile-content>{{ item.title }}</v-list-tile-content>
+        </v-list-tile>
+        <v-list-tile v-if="userIsAuthenticated" @click="onLogout">
+          <v-list-tile-action>
+            <v-icon>exit_to_app</v-icon>
+          </v-list-tile-action>
+          <v-list-tile-content>Logout</v-list-tile-content>
         </v-list-tile>
       </v-list>
     </v-navigation-drawer>
-    <v-toolbar app :clipped-left="clipped">
-      <v-toolbar-side-icon @click.stop="drawer = !drawer"></v-toolbar-side-icon>
-      <v-btn icon @click.stop="miniVariant = !miniVariant">
-        <v-icon v-html="miniVariant ? 'chevron_right' : 'chevron_left'"></v-icon>
-      </v-btn>
-      <v-btn icon @click.stop="clipped = !clipped">
-        <v-icon>web</v-icon>
-      </v-btn>
-      <v-btn icon @click.stop="fixed = !fixed">
-        <v-icon>remove</v-icon>
-      </v-btn>
-      <v-toolbar-title v-text="title"></v-toolbar-title>
+    <!--class||color="primary"-->
+    <v-toolbar class="primary" app>
+      <!--app=overlay, am=>@click.stop(oldCode?)-->
+      <v-toolbar-side-icon class="hidden-sm-and-up" @click="sideNav =!sideNav">
+      </v-toolbar-side-icon>
+      <v-toolbar-title>
+        <router-link to="/" tag="span" style="cursor: pointer">DevMeetup|OTBDG</router-link>
+      </v-toolbar-title>
       <v-spacer></v-spacer>
-      <v-btn icon @click.stop="rightDrawer = !rightDrawer">
-        <v-icon>menu</v-icon>
-      </v-btn>
+      <v-toolbar-items class="hidden-xs-only">
+        <v-btn v-for="item in menuItems" :key="item.title" :to="item.link" flat>
+          <v-icon left>{{ item.icon }}</v-icon>
+          {{ item.title }}
+        </v-btn>
+        <v-btn v-if="userIsAuthenticated" flat @click="onLogout">
+          <v-icon left>exit_to_app</v-icon>
+          Logout
+        </v-btn>
+      </v-toolbar-items>
     </v-toolbar>
-    <v-content>
-      <router-view/>
-    </v-content>
-    <v-navigation-drawer temporary :right="right" v-model="rightDrawer" fixed app>
-      <v-list>
-        <v-list-tile @click="right = !right">
-          <v-list-tile-action>
-            <v-icon>compare_arrows</v-icon>
-          </v-list-tile-action>
-          <v-list-tile-title>Switch drawer (click me)</v-list-tile-title>
-        </v-list-tile>
-      </v-list>
-    </v-navigation-drawer>
-    <v-footer :fixed="fixed" app>
-      <span>&copy; 2017</span>
-    </v-footer>
+    <main>
+      <v-content>
+        <v-container fluid>
+          <router-view></router-view>
+        </v-container>
+      </v-content>
+    </main>
   </v-app>
 </template>
 
@@ -53,20 +52,43 @@ export default {
   name: "App",
   data() {
     return {
-      clipped: false,
-      drawer: true,
-      fixed: false,
-      items: [
-        {
-          icon: "bubble_chart",
-          title: "Inspire"
-        }
-      ],
-      miniVariant: false,
-      right: true,
-      rightDrawer: false,
-      title: "Vuetify.js"
+      sideNav: false
     };
+  },
+  computed: {
+    menuItems() {
+      let menuItems = [
+        { icon: "face", title: "Sign Up", link: "/signup" },
+        { icon: "lock_open", title: "Sign In", link: "/signin" }
+      ];
+      if (this.userIsAuthenticated) {
+        menuItems = [
+          {
+            icon: "supervised_user_circle",
+            title: "View Meetups|Classes",
+            link: "/meetups"
+          },
+          {
+            icon: "room",
+            title: "Organize Meetups|Register Classes",
+            link: "/meetup/new"
+          },
+          { icon: "person", title: "Profile", link: "/profile" }
+        ];
+      }
+      return menuItems;
+    },
+    userIsAuthenticated() {
+      return (
+        this.$store.getters.user !== null &&
+        this.$store.getters.user !== undefined
+      );
+    }
+  },
+  methods: {
+    onLogout() {
+      this.$store.dispatch("logout");
+    }
   }
 };
 </script>
